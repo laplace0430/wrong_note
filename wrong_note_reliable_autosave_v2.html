@@ -1,0 +1,771 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#0b1220" />
+  <title>오답노트 최종판</title>
+  <style>
+    :root{
+      --bg:#0b1220; --panel:#111827; --panel2:#1f2937; --panel3:#0f172a; --line:#334155;
+      --text:#e5e7eb; --muted:#94a3b8; --accent:#3b82f6; --accentSoft:#1e3a8a; --danger:#ef4444;
+      --shadow:0 10px 30px rgba(0,0,0,.28); --safe-top:max(16px, env(safe-area-inset-top)); --safe-bottom:max(16px, env(safe-area-inset-bottom));
+    }
+    *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+    html,body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Malgun Gothic","Segoe UI",sans-serif}
+    body{min-height:100vh}
+    button,input,select,textarea{font:inherit}
+    .app{max-width:1500px;margin:0 auto;padding:var(--safe-top) 16px calc(108px + var(--safe-bottom))}
+    .top{display:flex;gap:16px;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;margin-bottom:18px}
+    .title{font-size:34px;font-weight:800;letter-spacing:-.03em}
+    .sub{color:var(--muted);font-size:15px;margin-top:6px;line-height:1.5}
+    .actions{display:flex;gap:10px;flex-wrap:wrap}
+    .btn{min-height:48px;padding:0 18px;border-radius:14px;border:1px solid var(--line);background:var(--panel);color:var(--text);font-weight:700;box-shadow:var(--shadow);cursor:pointer;user-select:none;-webkit-user-select:none}
+    .btn.primary{background:var(--accent);border-color:transparent;color:#fff}
+    .btn.soft{background:var(--accentSoft);color:#bfdbfe;border-color:transparent}
+    .btn.danger{background:#3b1111;color:#fecaca;border-color:transparent}
+    .summary{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:16px}
+    .metric{background:var(--panel);border:1px solid var(--line);border-radius:20px;padding:18px;box-shadow:var(--shadow)}
+    .metric .n{font-size:30px;font-weight:800}
+    .metric .k{font-size:13px;color:var(--muted);margin-top:4px}
+    .board{background:var(--panel);border:1px solid var(--line);border-radius:24px;box-shadow:var(--shadow);padding:20px;min-height:760px}
+    .section-title{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:12px}
+    .section-title h2{margin:0;font-size:22px}
+    .meta{font-size:13px;color:var(--muted)}
+    .input,.textarea,.select{width:100%;border:1px solid var(--line);background:var(--panel2);border-radius:16px;padding:16px;color:var(--text);outline:none;font-size:16px}
+    .input::placeholder,.textarea::placeholder{color:var(--muted)}
+    .textarea{min-height:140px;resize:vertical;line-height:1.65}
+    .textarea.large{min-height:220px}
+    .chips{display:flex;gap:8px;flex-wrap:wrap}
+    .chip{border:1px solid var(--line);background:var(--panel2);border-radius:999px;padding:12px 14px;font-size:14px;font-weight:700;color:#cbd5e1;cursor:pointer}
+    .chip.active{background:var(--accentSoft);border-color:transparent;color:#bfdbfe}
+    .searchbar{display:grid;grid-template-columns:1fr 220px 160px;gap:10px;margin-bottom:14px}
+    .list{display:flex;flex-direction:column;gap:14px}
+    .empty{border:1px dashed var(--line);background:var(--panel2);border-radius:20px;padding:32px;text-align:center;color:var(--muted)}
+    .card{border:1px solid var(--line);background:var(--panel2);border-radius:22px;padding:20px;box-shadow:0 4px 12px rgba(0,0,0,.18)}
+    .card-top{display:flex;justify-content:space-between;gap:10px;align-items:flex-start;flex-wrap:wrap}
+    .badges{display:flex;gap:8px;flex-wrap:wrap}
+    .badge{display:inline-flex;align-items:center;height:32px;padding:0 11px;border-radius:999px;font-size:12px;font-weight:800}
+    .b-subject{background:#082f49;color:#bae6fd}.b-unit{background:#3b0764;color:#e9d5ff}.b-type{background:#052e16;color:#bbf7d0}
+    .b-review0{background:#450a0a;color:#fecaca}.b-review1{background:#451a03;color:#fde68a}.b-review2{background:#052e16;color:#bbf7d0}
+    .problem{font-size:24px;font-weight:800;line-height:1.45;margin:14px 0}
+    .block{margin-top:12px;padding:16px;background:var(--panel3);border:1px solid var(--line);border-radius:16px}
+    .block h3{margin:0 0 8px;font-size:15px}
+    .block p{margin:0;white-space:pre-wrap;line-height:1.7;font-size:15px}
+    .card-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
+    .card-actions .btn{min-height:42px;padding:0 13px;border-radius:14px;box-shadow:none}
+    .preview-grid,.image-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin-top:10px}
+    .preview-item,.image-item{position:relative;border-radius:14px;overflow:hidden;border:1px solid var(--line);background:#0f172a}
+    .preview-item img,.image-item img{width:100%;height:100%;min-height:140px;object-fit:cover;display:block}
+    .remove-image-btn{position:absolute;top:6px;right:6px;min-height:auto;padding:7px 9px;border-radius:10px;font-size:12px;background:rgba(239,68,68,.92);color:white;border:none;cursor:pointer}
+    .hint{font-size:13px;color:var(--muted);margin-top:6px;line-height:1.5}
+    .canvas-wrap{margin-top:10px;border:1px solid var(--line);border-radius:18px;overflow:hidden;background:#fff}
+    .canvas-toolbar{display:flex;gap:8px;flex-wrap:wrap;padding:12px;background:#0f172a;border-bottom:1px solid var(--line);align-items:center;user-select:none;-webkit-user-select:none}
+    .tool-btn{min-height:40px;padding:0 13px;border-radius:12px;border:1px solid var(--line);background:var(--panel2);color:var(--text);font-weight:700;cursor:pointer;user-select:none;-webkit-user-select:none}
+    .tool-btn.active{background:var(--accent);border-color:transparent;color:white}
+    .stroke-range{width:140px;accent-color:#3b82f6}
+    .canvas-stage{position:relative;background:#fff;touch-action:none;user-select:none;-webkit-user-select:none;overflow:hidden;max-height:none}
+    #drawCanvas{display:block;width:100%;height:620px;background:#fff;touch-action:none;-webkit-user-select:none;user-select:none}
+    .canvas-meta{padding:12px 14px;background:#0f172a;border-top:1px solid var(--line);font-size:13px;color:var(--muted);line-height:1.5}
+    .drawing-preview{margin-top:12px;border:1px solid var(--line);border-radius:16px;overflow:hidden;background:#fff}
+    .drawing-preview img{display:block;width:100%;max-height:420px;object-fit:contain;background:#fff}
+    .color-buttons{display:flex;gap:6px;flex-wrap:wrap}
+    .color-btn{min-height:40px;padding:0 13px;border-radius:12px;border:1px solid var(--line);background:var(--panel2);color:white;cursor:pointer;font-size:12px;font-weight:700;user-select:none;-webkit-user-select:none}
+    .color-btn.active{outline:2px solid #fff4}
+    .color-btn.black{background:#111111}.color-btn.blue{background:#2563eb}.color-btn.red{background:#dc2626}
+    .footerbar{position:fixed;left:0;right:0;bottom:0;padding:10px 16px var(--safe-bottom);background:linear-gradient(to top, rgba(11,18,32,.98), rgba(11,18,32,.92), rgba(11,18,32,0));backdrop-filter:blur(10px)}
+    .footerinner{max-width:1500px;margin:0 auto;display:grid;grid-template-columns:1fr 78px;gap:10px}
+    .quicksearch{min-height:60px;border-radius:18px;border:1px solid var(--line);background:var(--panel2);color:var(--text);padding:0 18px;outline:none;box-shadow:var(--shadow);font-size:16px}
+    .fab{border:0;border-radius:18px;background:var(--accent);color:#fff;font-size:30px;font-weight:900;box-shadow:0 10px 30px rgba(59,130,246,.3);cursor:pointer}
+    .editor-overlay{position:fixed;inset:0;z-index:100;display:none;background:var(--bg)}
+    .editor-overlay.open{display:block}
+    .editor-shell{height:100%;overflow:auto;padding:var(--safe-top) 18px calc(24px + var(--safe-bottom));max-width:1220px;margin:0 auto}
+    .editor-header{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:16px;position:sticky;top:0;background:linear-gradient(to bottom, rgba(11,18,32,.98), rgba(11,18,32,.9), rgba(11,18,32,0));padding-bottom:10px;z-index:2}
+    .editor-card{background:var(--panel);border:1px solid var(--line);border-radius:24px;box-shadow:var(--shadow);padding:22px}
+    .field{margin-bottom:16px}
+    .field label{display:block;font-size:14px;font-weight:700;margin-bottom:8px;color:#cbd5e1}
+    .row2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+    .warning{font-size:13px;color:#fca5a5}
+    @media (max-width: 1100px){ .summary{grid-template-columns:repeat(2,1fr)} .searchbar{grid-template-columns:1fr} .editor-shell{max-width:100%;padding-left:12px;padding-right:12px} #drawCanvas{height:520px} }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <div class="top">
+      <div>
+        <div class="title">오답노트</div>
+        <div class="sub">목록 먼저 보고, + 누르면 전체화면 작성. 필기는 자동 백업되고 손가락은 스크롤/확대, 펜만 필기됨.</div>
+      </div>
+      <div class="actions">
+        <button class="btn soft" id="sampleBtn">예시 추가</button>
+        <button class="btn" id="exportBtn">내보내기</button>
+        <button class="btn" id="importBtn">불러오기</button>
+        <input type="file" id="importFile" accept=".json" hidden />
+      </div>
+    </div>
+
+    <div class="summary">
+      <div class="metric"><div class="n" id="totalCount">0</div><div class="k">전체 오답</div></div>
+      <div class="metric"><div class="n" id="todayCount">0</div><div class="k">오늘 추가</div></div>
+      <div class="metric"><div class="n" id="needReviewCount">0</div><div class="k">복습 필요</div></div>
+      <div class="metric"><div class="n" id="doneCount">0</div><div class="k">복습 완료</div></div>
+    </div>
+
+    <main class="board">
+      <div class="section-title">
+        <h2>정리된 오답</h2>
+        <div class="meta" id="listMeta">0개 표시 중</div>
+      </div>
+
+      <div class="searchbar">
+        <input class="input" id="searchInput" placeholder="문제, 과목, 단원, 이유 검색" />
+        <input class="input" id="subjectFilter" placeholder="과목 필터 (직접 입력)" />
+        <select class="select" id="reviewFilter">
+          <option value="전체">전체 상태</option>
+          <option value="복습 필요">복습 필요</option>
+          <option value="복습 중">복습 중</option>
+          <option value="복습 완료">복습 완료</option>
+        </select>
+      </div>
+
+      <div class="list" id="list"></div>
+    </main>
+  </div>
+
+  <div class="editor-overlay" id="editorOverlay">
+    <div class="editor-shell">
+      <div class="editor-header">
+        <h2 id="formTitle" style="margin:0;font-size:26px;">오답 작성</h2>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;">
+          <button class="btn" id="closeEditorBtn">닫기</button>
+          <button class="btn" id="resetFormBtn">초기화</button>
+        </div>
+      </div>
+
+      <div class="editor-card">
+        <div class="row2">
+          <div class="field">
+            <label for="subjectInput">과목</label>
+            <input class="input" id="subjectInput" placeholder="예: 수학, 물리학1, 영어" />
+          </div>
+          <div class="field">
+            <label for="unitInput">단원</label>
+            <input class="input" id="unitInput" placeholder="예: 적분, 역학, 전자기" />
+          </div>
+        </div>
+
+        <div class="row2">
+          <div class="field">
+            <label for="typeInput">유형</label>
+            <input class="input" id="typeInput" placeholder="예: 계산 실수, 개념 미흡" />
+          </div>
+          <div class="field">
+            <label for="dateInput">푼 날짜</label>
+            <input class="input" id="dateInput" type="date" />
+          </div>
+        </div>
+
+        <div class="field">
+          <label for="sourceInput">출처</label>
+          <input class="input" id="sourceInput" placeholder="예: 3월 모의고사 12번, 수특 45쪽" />
+        </div>
+
+        <div class="field">
+          <label for="problemInput">문제 / 제목</label>
+          <textarea class="textarea large" id="problemInput" placeholder="어떤 문제였는지, 무엇을 물었는지 자세히 적기"></textarea>
+        </div>
+
+        <div class="field">
+          <label for="problemImageInput">문제 이미지</label>
+          <input class="input" id="problemImageInput" type="file" accept="image/*" multiple />
+          <div class="hint">문제 캡처, 지문 사진 등을 여기에 첨부</div>
+          <div class="preview-grid" id="problemImagePreview"></div>
+        </div>
+
+        <div class="field">
+          <label>틀린 이유</label>
+          <div class="chips" id="reasonChips">
+            <button type="button" class="chip active" data-value="개념 부족">개념 부족</button>
+            <button type="button" class="chip" data-value="계산 실수">계산 실수</button>
+            <button type="button" class="chip" data-value="조건 해석 실수">조건 해석 실수</button>
+            <button type="button" class="chip" data-value="시간 부족">시간 부족</button>
+            <button type="button" class="chip" data-value="암기 부족">암기 부족</button>
+          </div>
+        </div>
+
+        <div class="field">
+          <label for="reasonDetailInput">세부 원인</label>
+          <textarea class="textarea" id="reasonDetailInput" placeholder="왜 틀렸는지, 어떤 생각 때문에 막혔는지 자세히 적기"></textarea>
+        </div>
+
+        <div class="field">
+          <label for="correctInput">정답 / 다시 푼 핵심</label>
+          <textarea class="textarea large" id="correctInput" placeholder="다시 풀면서 핵심 논리와 정답을 정리"></textarea>
+        </div>
+
+        <div class="field">
+          <label for="solutionImageInput">풀이 이미지</label>
+          <input class="input" id="solutionImageInput" type="file" accept="image/*" multiple />
+          <div class="hint">직접 푼 풀이 사진, 필기 캡처 등을 여기에 첨부</div>
+          <div class="preview-grid" id="solutionImagePreview"></div>
+        </div>
+
+        <div class="field">
+          <label>풀이 필기</label>
+          <div class="canvas-wrap">
+            <div class="canvas-toolbar">
+              <button type="button" class="tool-btn active" id="penToolBtn">펜</button>
+              <button type="button" class="tool-btn" id="eraserToolBtn">지우개</button>
+              <div class="color-buttons">
+                <button type="button" class="color-btn black active" data-color="#111111">검정</button>
+                <button type="button" class="color-btn blue" data-color="#2563eb">파랑</button>
+                <button type="button" class="color-btn red" data-color="#dc2626">빨강</button>
+              </div>
+              <input type="range" id="penSize" class="stroke-range" min="2" max="18" value="5">
+              <button type="button" class="tool-btn" id="undoBtn">되돌리기</button>
+              <button type="button" class="tool-btn" id="clearCanvasBtn">전체 지우기</button>
+            </div>
+            <div class="canvas-stage"><canvas id="drawCanvas"></canvas></div>
+            <div class="canvas-meta">
+              필기 중 자동 백업됨. 손가락은 스크롤/확대용으로 두고, 애플펜슬만 필기 입력으로 받게 구현함.
+              <div class="warning">브라우저 기반이라 시스템 앱 수준 팜 리젝션과 100% 동일하진 않지만, 이전보다 훨씬 안정적으로 동작하도록 손 입력을 무시하고 자동 저장을 강화했다.</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="field">
+          <label for="memoryInput">다음에 안 틀리기 위한 한 줄</label>
+          <textarea class="textarea" id="memoryInput" placeholder="예: 부호 먼저 확인, 그래프 해석 먼저, 조건 문장 두 번 읽기"></textarea>
+        </div>
+
+        <div class="row2">
+          <button class="btn primary" id="saveBtn">저장</button>
+          <button class="btn" id="reviewBtn">복습 완료 표시</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="footerbar">
+    <div class="footerinner">
+      <input class="quicksearch" id="quickSearch" placeholder="빠르게 검색" />
+      <button class="fab" id="newBtn">+</button>
+    </div>
+  </div>
+
+<script>
+const STORAGE_KEY = "wrong_note_fullscreen_editor_reliable_v1";
+const DRAFT_KEY = "wrong_note_editor_draft_v1";
+let notes = loadNotes();
+let editingId = null;
+let problemImages = [];
+let solutionImages = [];
+let currentDrawing = null;
+
+const today = new Date().toISOString().slice(0,10);
+document.getElementById("dateInput").value = today;
+
+const reasonChips = [...document.querySelectorAll("#reasonChips .chip")];
+const colorBtns = [...document.querySelectorAll(".color-btn")];
+const editorOverlay = document.getElementById("editorOverlay");
+const problemImageInput = document.getElementById("problemImageInput");
+const solutionImageInput = document.getElementById("solutionImageInput");
+const problemImagePreview = document.getElementById("problemImagePreview");
+const solutionImagePreview = document.getElementById("solutionImagePreview");
+const formTitle = document.getElementById("formTitle");
+
+const canvas = document.getElementById("drawCanvas");
+const ctx = canvas.getContext("2d");
+let dpr = Math.max(window.devicePixelRatio || 1, 1);
+let isDrawing = false;
+let activePointerId = null;
+let currentTool = "pen";
+let penColor = "#111111";
+let penSize = Number(document.getElementById("penSize").value);
+let drawHistory = [];
+let autosaveTimer = null;
+let textDraftTimer = null;
+
+function loadNotes(){ try{ const raw = JSON.parse(localStorage.getItem(STORAGE_KEY)); return Array.isArray(raw) ? raw : []; }catch{ return []; } }
+function saveNotes(){ localStorage.setItem(STORAGE_KEY, JSON.stringify(notes)); }
+function esc(text){ return String(text ?? "").replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;").replaceAll('"',"&quot;").replaceAll("'","&#39;"); }
+
+function openEditor(){
+  editorOverlay.classList.add("open");
+  initCanvas();
+  if(currentDrawing) loadCanvasFromDataURL(currentDrawing);
+}
+function closeEditor(){
+  safeDraftSave();
+  editorOverlay.classList.remove("open");
+}
+
+function selectedReason(){ const active = reasonChips.find(chip => chip.classList.contains("active")); return active ? active.dataset.value : "개념 부족"; }
+reasonChips.forEach(chip => chip.addEventListener("click", ()=>{ reasonChips.forEach(c=>c.classList.remove("active")); chip.classList.add("active"); saveDraftState(); }));
+
+function reviewLabel(status){ if(status===2) return "복습 완료"; if(status===1) return "복습 중"; return "복습 필요"; }
+function reviewBadgeClass(status){ if(status===2) return "b-review2"; if(status===1) return "b-review1"; return "b-review0"; }
+
+function renderPreview(container, items, type){
+  if(items.length === 0){ container.innerHTML = ""; return; }
+  container.innerHTML = items.map((img, idx) => `<div class="preview-item"><img src="${img}" alt="${type}-${idx}"><button type="button" class="remove-image-btn" onclick="removePreviewImage('${type}', ${idx})">삭제</button></div>`).join("");
+}
+window.removePreviewImage = function(type, idx){
+  if(type==="problem") problemImages.splice(idx,1);
+  if(type==="solution") solutionImages.splice(idx,1);
+  syncPreviews();
+  saveDraftState();
+};
+function syncPreviews(){ renderPreview(problemImagePreview, problemImages, "problem"); renderPreview(solutionImagePreview, solutionImages, "solution"); }
+
+function readFileAsDataURL(file){ return new Promise((resolve, reject)=>{ const reader = new FileReader(); reader.onload = ()=>resolve(reader.result); reader.onerror = reject; reader.readAsDataURL(file); }); }
+async function handleMultiImageInput(input, targetArray){
+  const files = Array.from(input.files || []);
+  if(!files.length) return;
+  const loaded = await Promise.all(files.map(readFileAsDataURL));
+  targetArray.push(...loaded); input.value = ""; syncPreviews(); saveDraftState();
+}
+problemImageInput.addEventListener("change", ()=>handleMultiImageInput(problemImageInput, problemImages));
+solutionImageInput.addEventListener("change", ()=>handleMultiImageInput(solutionImageInput, solutionImages));
+
+function buildDraftPayload(includeHeavy=true){
+  return {
+    editingId,
+    subject: document.getElementById("subjectInput").value,
+    unit: document.getElementById("unitInput").value,
+    type: document.getElementById("typeInput").value,
+    date: document.getElementById("dateInput").value,
+    source: document.getElementById("sourceInput").value,
+    problem: document.getElementById("problemInput").value,
+    reason: selectedReason(),
+    reasonDetail: document.getElementById("reasonDetailInput").value,
+    correct: document.getElementById("correctInput").value,
+    memory: document.getElementById("memoryInput").value,
+    problemImages: includeHeavy ? problemImages : [],
+    solutionImages: includeHeavy ? solutionImages : [],
+    drawing: includeHeavy ? currentDrawing : null
+  };
+}
+function saveDraftState(includeHeavy=true){
+  try{
+    const existingRaw = localStorage.getItem(DRAFT_KEY);
+    let draft = buildDraftPayload(includeHeavy);
+    if(!includeHeavy && existingRaw){
+      try{
+        const existing = JSON.parse(existingRaw);
+        draft.problemImages = Array.isArray(existing.problemImages) ? existing.problemImages : [];
+        draft.solutionImages = Array.isArray(existing.solutionImages) ? existing.solutionImages : [];
+        draft.drawing = existing.drawing || null;
+      }catch{}
+    }
+    localStorage.setItem(DRAFT_KEY, JSON.stringify(draft));
+  }catch{}
+}
+function scheduleTextDraftSave(){
+  if(textDraftTimer) clearTimeout(textDraftTimer);
+  textDraftTimer = setTimeout(() => saveDraftState(false), 700);
+}
+function clearDraftState(){ try{ localStorage.removeItem(DRAFT_KEY); }catch{} }
+
+function restoreDraftIfAny(){
+  try{
+    const raw = localStorage.getItem(DRAFT_KEY);
+    if(!raw) return false;
+    const draft = JSON.parse(raw);
+    if(!draft || typeof draft !== "object") return false;
+
+    editingId = draft.editingId ?? null;
+    document.getElementById("subjectInput").value = draft.subject || "";
+    document.getElementById("unitInput").value = draft.unit || "";
+    document.getElementById("typeInput").value = draft.type || "";
+    document.getElementById("dateInput").value = draft.date || today;
+    document.getElementById("sourceInput").value = draft.source || "";
+    document.getElementById("problemInput").value = draft.problem || "";
+    document.getElementById("reasonDetailInput").value = draft.reasonDetail || "";
+    document.getElementById("correctInput").value = draft.correct || "";
+    document.getElementById("memoryInput").value = draft.memory || "";
+    problemImages = Array.isArray(draft.problemImages) ? draft.problemImages : [];
+    solutionImages = Array.isArray(draft.solutionImages) ? draft.solutionImages : [];
+    currentDrawing = draft.drawing || null;
+    syncPreviews();
+    reasonChips.forEach(c => c.classList.toggle("active", c.dataset.value === (draft.reason || "개념 부족")));
+    formTitle.textContent = editingId ? "오답 수정" : "오답 작성";
+    return true;
+  }catch{
+    return false;
+  }
+}
+
+function initCanvas(){
+  const preserved = currentDrawing || (canvas.width > 0 && hasDrawing() ? canvas.toDataURL("image/png") : null);
+  const rect = canvas.getBoundingClientRect();
+  dpr = Math.max(window.devicePixelRatio || 1, 1);
+  canvas.width = Math.max(1, Math.floor(rect.width * dpr));
+  canvas.height = Math.max(1, Math.floor(620 * dpr));
+  ctx.setTransform(dpr,0,0,dpr,0,0);
+  ctx.globalCompositeOperation = "source-over";
+  ctx.fillStyle = "#ffffff";
+  ctx.fillRect(0,0,rect.width,620);
+  drawHistory = [];
+  currentDrawing = null;
+  if(preserved){
+    setTimeout(() => loadCanvasFromDataURL(preserved), 0);
+  } else {
+    snapshotCanvas();
+  }
+}
+function setTool(tool){
+  currentTool = tool;
+  document.getElementById("penToolBtn").classList.toggle("active", tool==="pen");
+  document.getElementById("eraserToolBtn").classList.toggle("active", tool==="eraser");
+}
+function setPenColor(color){
+  penColor = color;
+  colorBtns.forEach(btn => btn.classList.toggle("active", btn.dataset.color === color));
+  if(currentTool !== "eraser") setTool("pen");
+  saveDraftState();
+}
+colorBtns.forEach(btn => btn.addEventListener("click", ()=> setPenColor(btn.dataset.color)));
+document.getElementById("penToolBtn").addEventListener("click", ()=>{ setTool("pen"); saveDraftState(); });
+document.getElementById("eraserToolBtn").addEventListener("click", ()=>{ setTool("eraser"); saveDraftState(); });
+document.getElementById("penSize").addEventListener("input", e=>{ penSize = Number(e.target.value); saveDraftState(); });
+
+function applyBrush(){
+  if(currentTool === "eraser"){ ctx.globalCompositeOperation = "destination-out"; ctx.strokeStyle = "rgba(0,0,0,1)"; ctx.lineWidth = penSize * 2.3; }
+  else { ctx.globalCompositeOperation = "source-over"; ctx.strokeStyle = penColor; ctx.lineWidth = penSize; }
+  ctx.lineCap = "round"; ctx.lineJoin = "round";
+}
+function hasDrawing(){
+  const blank = document.createElement("canvas");
+  blank.width = canvas.width; blank.height = canvas.height;
+  const bctx = blank.getContext("2d");
+  bctx.fillStyle = "#ffffff"; bctx.fillRect(0,0,blank.width,blank.height);
+  return canvas.toDataURL("image/png") !== blank.toDataURL("image/png");
+}
+function snapshotCanvas(){
+  try{
+    const dataUrl = canvas.toDataURL("image/png");
+    drawHistory.push(dataUrl);
+    if(drawHistory.length > 50) drawHistory.shift();
+    currentDrawing = hasDrawing() ? dataUrl : null;
+  }catch{}
+}
+function scheduleCanvasAutosave(){
+  if(autosaveTimer) clearTimeout(autosaveTimer);
+  autosaveTimer = setTimeout(() => {
+    snapshotCanvas();
+    saveDraftState();
+  }, 300);
+}
+function safeDraftSave(){
+  snapshotCanvas();
+  saveDraftState();
+}
+function clearCanvas(push=true){
+  const rect = canvas.getBoundingClientRect();
+  ctx.setTransform(dpr,0,0,dpr,0,0);
+  ctx.globalCompositeOperation = "source-over";
+  ctx.fillStyle = "#ffffff";
+  ctx.fillRect(0,0,rect.width,620);
+  if(push){
+    drawHistory = [];
+    snapshotCanvas();
+    saveDraftState();
+  } else {
+    drawHistory = [];
+    currentDrawing = null;
+  }
+}
+function loadCanvasFromDataURL(dataUrl){
+  const rect = canvas.getBoundingClientRect();
+  ctx.setTransform(dpr,0,0,dpr,0,0);
+  ctx.globalCompositeOperation = "source-over";
+  ctx.fillStyle = "#ffffff";
+  ctx.fillRect(0,0,rect.width,620);
+  drawHistory = [];
+  currentDrawing = null;
+  if(!dataUrl){
+    snapshotCanvas();
+    return;
+  }
+  const img = new Image();
+  img.onload = ()=>{
+    ctx.setTransform(dpr,0,0,dpr,0,0);
+    ctx.fillStyle = "#ffffff";
+    ctx.fillRect(0,0,rect.width,620);
+    ctx.drawImage(img, 0, 0, rect.width, 620);
+    drawHistory = [canvas.toDataURL("image/png")];
+    currentDrawing = canvas.toDataURL("image/png");
+    saveDraftState();
+  };
+  img.src = dataUrl;
+}
+function getPoint(e){ const rect = canvas.getBoundingClientRect(); return { x: e.clientX - rect.left, y: e.clientY - rect.top }; }
+function isStylusEvent(e){ return e.pointerType === "pen"; }
+
+canvas.addEventListener("pointerdown", e=>{
+  if(!isStylusEvent(e)) return;
+  e.preventDefault();
+  activePointerId = e.pointerId;
+  isDrawing = true;
+  const p = getPoint(e);
+  applyBrush();
+  ctx.beginPath();
+  ctx.moveTo(p.x, p.y);
+  try{ canvas.setPointerCapture(e.pointerId); }catch{}
+});
+canvas.addEventListener("pointermove", e=>{
+  if(!isDrawing || e.pointerId !== activePointerId) return;
+  if(!isStylusEvent(e)) return;
+  e.preventDefault();
+  const p = getPoint(e);
+  applyBrush();
+  ctx.lineTo(p.x, p.y);
+  ctx.stroke();
+  scheduleCanvasAutosave();
+});
+function finishDraw(e){
+  if(!isDrawing || e.pointerId !== activePointerId) return;
+  e.preventDefault();
+  isDrawing = false;
+  activePointerId = null;
+  ctx.closePath();
+  snapshotCanvas();
+  saveDraftState();
+}
+canvas.addEventListener("pointerup", finishDraw);
+canvas.addEventListener("pointerleave", finishDraw);
+canvas.addEventListener("pointercancel", finishDraw);
+
+document.getElementById("undoBtn").addEventListener("click", ()=>{
+  if(drawHistory.length <= 1){ clearCanvas(); return; }
+  drawHistory.pop();
+  loadCanvasFromDataURL(drawHistory[drawHistory.length - 1]);
+});
+document.getElementById("clearCanvasBtn").addEventListener("click", ()=>clearCanvas());
+
+function getFormData(){
+  const problem = document.getElementById("problemInput").value.trim();
+  if(!problem){ alert("문제 / 제목을 입력해."); document.getElementById("problemInput").focus(); return null; }
+  return {
+    id: editingId || (crypto.randomUUID ? crypto.randomUUID() : String(Date.now()+Math.random())),
+    subject: document.getElementById("subjectInput").value.trim(),
+    unit: document.getElementById("unitInput").value.trim(),
+    type: document.getElementById("typeInput").value.trim(),
+    date: document.getElementById("dateInput").value || today,
+    source: document.getElementById("sourceInput").value.trim(),
+    problem,
+    problemImages:[...problemImages],
+    reason:selectedReason(),
+    reasonDetail:document.getElementById("reasonDetailInput").value.trim(),
+    correct:document.getElementById("correctInput").value.trim(),
+    solutionImages:[...solutionImages],
+    drawing:currentDrawing,
+    memory:document.getElementById("memoryInput").value.trim(),
+    reviewStatus:0,
+    createdAt:Date.now()
+  };
+}
+function resetForm(){
+  editingId = null;
+  formTitle.textContent = "오답 작성";
+  document.getElementById("subjectInput").value = "";
+  document.getElementById("unitInput").value = "";
+  document.getElementById("typeInput").value = "";
+  document.getElementById("dateInput").value = today;
+  document.getElementById("sourceInput").value = "";
+  document.getElementById("problemInput").value = "";
+  document.getElementById("reasonDetailInput").value = "";
+  document.getElementById("correctInput").value = "";
+  document.getElementById("memoryInput").value = "";
+  problemImages = []; solutionImages = []; currentDrawing = null;
+  problemImageInput.value = ""; solutionImageInput.value = "";
+  syncPreviews();
+  reasonChips.forEach(c=>c.classList.remove("active")); reasonChips[0].classList.add("active");
+  clearCanvas();
+  clearDraftState();
+}
+function saveCurrent(){
+  safeDraftSave();
+  const data = getFormData();
+  if(!data) return;
+  if(editingId){
+    const idx = notes.findIndex(n => n.id === editingId);
+    if(idx !== -1){ data.reviewStatus = notes[idx].reviewStatus; data.createdAt = notes[idx].createdAt; notes[idx] = data; }
+  }else{
+    notes.unshift(data);
+  }
+  saveNotes();
+  resetForm();
+  render();
+  closeEditor();
+}
+function markReviewDone(){
+  safeDraftSave();
+  if(!editingId){ alert("먼저 목록에서 수정할 오답을 선택해."); return; }
+  const idx = notes.findIndex(n => n.id === editingId);
+  if(idx === -1) return;
+  notes[idx].reviewStatus = 2;
+  saveNotes();
+  clearDraftState();
+  render();
+  closeEditor();
+}
+function openEdit(id){
+  const note = notes.find(n => n.id === id);
+  if(!note) return;
+  editingId = note.id;
+  formTitle.textContent = "오답 수정";
+  document.getElementById("subjectInput").value = note.subject || "";
+  document.getElementById("unitInput").value = note.unit || "";
+  document.getElementById("typeInput").value = note.type || "";
+  document.getElementById("dateInput").value = note.date || today;
+  document.getElementById("sourceInput").value = note.source || "";
+  document.getElementById("problemInput").value = note.problem || "";
+  document.getElementById("reasonDetailInput").value = note.reasonDetail || "";
+  document.getElementById("correctInput").value = note.correct || "";
+  document.getElementById("memoryInput").value = note.memory || "";
+  problemImages = Array.isArray(note.problemImages) ? [...note.problemImages] : [];
+  solutionImages = Array.isArray(note.solutionImages) ? [...note.solutionImages] : [];
+  currentDrawing = note.drawing || null;
+  syncPreviews();
+  reasonChips.forEach(c => c.classList.toggle("active", c.dataset.value === (note.reason || "개념 부족")));
+  openEditor();
+  setTimeout(()=>{
+    loadCanvasFromDataURL(currentDrawing);
+    saveDraftState();
+  }, 30);
+}
+function cycleReview(id){
+  const idx = notes.findIndex(n => n.id === id);
+  if(idx === -1) return;
+  notes[idx].reviewStatus = (notes[idx].reviewStatus + 1) % 3;
+  saveNotes();
+  render();
+}
+function removeNote(id){
+  const note = notes.find(n => n.id === id);
+  if(!note) return;
+  if(!confirm(`'${note.problem.slice(0,20)}' 삭제할까?`)) return;
+  notes = notes.filter(n => n.id !== id);
+  if(editingId === id) resetForm();
+  saveNotes();
+  render();
+}
+function duplicateNote(id){
+  const note = notes.find(n => n.id === id);
+  if(!note) return;
+  notes.unshift({...note, id: crypto.randomUUID ? crypto.randomUUID() : String(Date.now()+Math.random()), problem: note.problem + " (복사본)", reviewStatus:0, createdAt:Date.now()});
+  saveNotes();
+  render();
+}
+function filteredNotes(){
+  const keyword = (document.getElementById("searchInput").value || document.getElementById("quickSearch").value || "").trim().toLowerCase();
+  const subjectFilter = document.getElementById("subjectFilter").value.trim().toLowerCase();
+  const reviewFilter = document.getElementById("reviewFilter").value;
+  return [...notes].filter(note => {
+    const matchesKeyword = !keyword || [note.problem, note.subject, note.unit, note.reason, note.reasonDetail, note.correct, note.memory, note.source, note.type].join(" ").toLowerCase().includes(keyword);
+    const matchesSubject = !subjectFilter || (note.subject || "").toLowerCase().includes(subjectFilter);
+    const matchesReview = reviewFilter === "전체" || reviewLabel(note.reviewStatus) === reviewFilter;
+    return matchesKeyword && matchesSubject && matchesReview;
+  }).sort((a,b)=> (b.createdAt||0)-(a.createdAt||0));
+}
+function renderSummary(){
+  document.getElementById("totalCount").textContent = notes.length;
+  document.getElementById("todayCount").textContent = notes.filter(n => n.date === today).length;
+  document.getElementById("needReviewCount").textContent = notes.filter(n => n.reviewStatus !== 2).length;
+  document.getElementById("doneCount").textContent = notes.filter(n => n.reviewStatus === 2).length;
+}
+function render(){
+  renderSummary();
+  const list = document.getElementById("list");
+  const data = filteredNotes();
+  document.getElementById("listMeta").textContent = `${data.length}개 표시 중`;
+  if(!data.length){ list.innerHTML = `<div class="empty">아직 정리된 오답이 없어. 아래 + 버튼을 눌러 첫 오답을 작성해.</div>`; return; }
+  list.innerHTML = data.map(note => `
+    <div class="card">
+      <div class="card-top">
+        <div class="badges">
+          ${note.subject ? `<span class="badge b-subject">${esc(note.subject)}</span>` : ""}
+          ${note.unit ? `<span class="badge b-unit">${esc(note.unit)}</span>` : ""}
+          ${note.type ? `<span class="badge b-type">${esc(note.type)}</span>` : ""}
+          <span class="badge ${reviewBadgeClass(note.reviewStatus)}">${reviewLabel(note.reviewStatus)}</span>
+        </div>
+        <div class="meta">${esc(note.date || "")}${note.source ? " · " + esc(note.source) : ""}</div>
+      </div>
+      <div class="problem">${esc(note.problem)}</div>
+      ${(Array.isArray(note.problemImages) && note.problemImages.length) ? `<div class="block"><h3>문제 이미지</h3><div class="image-grid">${note.problemImages.map(img => `<div class="image-item"><img src="${img}" alt="problem-image"></div>`).join("")}</div></div>` : ""}
+      <div class="block"><h3>틀린 이유</h3><p><strong>${esc(note.reason || "")}</strong>${note.reasonDetail ? "\n" + esc(note.reasonDetail) : ""}</p></div>
+      <div class="block"><h3>다시 푼 핵심</h3><p>${esc(note.correct || "아직 정리 안 함")}</p></div>
+      ${(Array.isArray(note.solutionImages) && note.solutionImages.length) ? `<div class="block"><h3>풀이 이미지</h3><div class="image-grid">${note.solutionImages.map(img => `<div class="image-item"><img src="${img}" alt="solution-image"></div>`).join("")}</div></div>` : ""}
+      ${note.drawing ? `<div class="block"><h3>풀이 필기</h3><div class="drawing-preview"><img src="${note.drawing}" alt="drawing-image"></div></div>` : ""}
+      <div class="block"><h3>다음에 안 틀리기 위한 한 줄</h3><p>${esc(note.memory || "아직 정리 안 함")}</p></div>
+      <div class="card-actions">
+        <button class="btn" onclick="openEdit('${note.id}')">수정</button>
+        <button class="btn soft" onclick="cycleReview('${note.id}')">복습 상태 변경</button>
+        <button class="btn" onclick="duplicateNote('${note.id}')">복제</button>
+        <button class="btn danger" onclick="removeNote('${note.id}')">삭제</button>
+      </div>
+    </div>`).join("");
+}
+function exportData(){
+  const blob = new Blob([JSON.stringify(notes, null, 2)], {type:"application/json"});
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob); a.download = "wrong_note_reliable_autosave.json"; a.click(); URL.revokeObjectURL(a.href);
+}
+function importData(file){
+  const reader = new FileReader();
+  reader.onload = () => {
+    try{
+      const parsed = JSON.parse(reader.result);
+      if(!Array.isArray(parsed)) throw new Error();
+      notes = parsed.map(note => ({...note, problemImages:Array.isArray(note.problemImages)?note.problemImages:[], solutionImages:Array.isArray(note.solutionImages)?note.solutionImages:[], drawing:note.drawing||null}));
+      saveNotes();
+      resetForm();
+      render();
+    }catch{ alert("올바른 JSON 파일이 아니야."); }
+  };
+  reader.readAsText(file, "utf-8");
+}
+function addSample(){
+  if(notes.length > 0 && !confirm("이미 데이터가 있는데 예시를 추가할까?")) return;
+  notes.unshift({id: crypto.randomUUID ? crypto.randomUUID() : String(Date.now()), subject:"수학", unit:"적분", type:"계산 실수", date:today, source:"기출 21번", problem:"부분적분을 두 번 써야 하는 문제였는데 첫 단계에서 부호를 잘못 처리함.", problemImages:[], reason:"계산 실수", reasonDetail:"미분되는 항과 적분되는 항을 바꿔 적었고 마지막 부호 확인을 안 함.", correct:"u=x, dv=e^x dx로 놓고 부분적분 후 다시 한 번 적용. 마지막에 상수항 정리까지 확인.", solutionImages:[], drawing:null, memory:"부분적분 문제는 식 변형 끝난 뒤 부호를 한 번 더 체크.", reviewStatus:1, createdAt:Date.now()});
+  saveNotes();
+  render();
+}
+
+document.getElementById("saveBtn").addEventListener("click", saveCurrent);
+document.getElementById("reviewBtn").addEventListener("click", markReviewDone);
+document.getElementById("resetFormBtn").addEventListener("click", resetForm);
+document.getElementById("closeEditorBtn").addEventListener("click", closeEditor);
+document.getElementById("exportBtn").addEventListener("click", exportData);
+document.getElementById("importBtn").addEventListener("click", ()=>document.getElementById("importFile").click());
+document.getElementById("importFile").addEventListener("change", e=>{ const file = e.target.files?.[0]; if(file) importData(file); e.target.value = ""; });
+document.getElementById("sampleBtn").addEventListener("click", addSample);
+document.getElementById("newBtn").addEventListener("click", ()=>{
+  resetForm();
+  restoreDraftIfAny();
+  openEditor();
+  document.getElementById("problemInput").focus();
+});
+document.getElementById("searchInput").addEventListener("input", e=>{ document.getElementById("quickSearch").value = e.target.value; render(); });
+document.getElementById("quickSearch").addEventListener("input", e=>{ document.getElementById("searchInput").value = e.target.value; render(); });
+document.getElementById("subjectFilter").addEventListener("input", render);
+document.getElementById("reviewFilter").addEventListener("change", render);
+
+["subjectInput","unitInput","typeInput","dateInput","sourceInput","problemInput","reasonDetailInput","correctInput","memoryInput"].forEach(id=>{
+  document.getElementById(id).addEventListener("input", scheduleTextDraftSave);
+  document.getElementById(id).addEventListener("change", () => saveDraftState(false));
+});
+
+document.addEventListener("visibilitychange", ()=>{ if(document.visibilityState === "hidden") safeDraftSave(); });
+window.addEventListener("pagehide", safeDraftSave);
+window.addEventListener("beforeunload", safeDraftSave);
+window.addEventListener("resize", ()=>{ if(editorOverlay.classList.contains("open")) initCanvas(); });
+
+window.openEdit = openEdit; window.cycleReview = cycleReview; window.removeNote = removeNote; window.duplicateNote = duplicateNote;
+
+initCanvas(); setTool("pen"); setPenColor("#111111"); resetForm(); render();
+</script>
+</body>
+</html>
